@@ -1,21 +1,19 @@
-#include "Section.hpp"
-#include "Trick.hpp"
+#include "Skatepark.hpp"
 
+#include <cstdint>
 #include <iostream>
-#include <vector>
 
 int main(int argc, char const *argv[]) {
-    
+
     uint16_t N, K;
 
     std::cin >> N;
     std::cin >> K;
-    
-    std::vector<Section*> sections;
-    std::vector<Trick*> tricks;
+
+    std::vector<Section *> sections;
+    std::vector<Trick *> tricks;
     sections.reserve(N);
     tricks.reserve(K);
-
 
     for (uint8_t i = 0; i < N; i++) {
         uint16_t c;
@@ -36,22 +34,16 @@ int main(int argc, char const *argv[]) {
         tricks.push_back(new Trick(p, t));
     }
 
-    
-    for (Section *s : sections) {
-        std::cout << s->m_bonus_factor << ' ' << s->m_crossing_time << '\n';
-    }
+    Skatepark park(sections, tricks);
 
-    for (Trick *t : tricks) {
-        std::cout << t->m_baseline_score << ' ' << t->m_time_trick << '\n';
-    }
-    
-    for (Section *s : sections) {
+    uint64_t t = park.findMaxTrickSequence();
+    std::cout << t << std::endl;
+
+    for (Section *s : sections)
         delete s;
-    }
 
-    for (Trick *t : tricks) {
+    for (Trick *t : tricks)
         delete t;
-    }
 
     return 0;
 }
