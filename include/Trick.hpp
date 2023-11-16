@@ -9,4 +9,6 @@ public:
     uint8_t m_index;
 
     Trick(int32_t baseline_score, uint32_t time_trick, uint8_t index);
+
+    Trick(const Trick &t);
 };
