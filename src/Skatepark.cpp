@@ -1,83 +1,77 @@
 #include "Skatepark.hpp"
 
-Skatepark::Skatepark(std::vector<Section *> &sections, std::vector<Trick *> &tricks) : m_sections(sections), m_tricks(tricks) {}
+Skatepark::Skatepark(std::vector<Section *> sections, std::vector<Trick *> tricks) {
+    this->m_sections = sections;
+    this->m_tricks = tricks;
 
-uint64_t Skatepark::T_zero(int16_t n, uint8_t last_stage) {
-    if (n < 0)
-        return 0;
+    m_matrix_tricks = std::vector<std::vector<std::pair<int64_t, std::vector<Trick *>>>>(100);
 
-    std::set<uint16_t> use_tricks;
+    for (uint16_t i = 0; i < 100; i++)
+        m_matrix_tricks[i] = std::vector<std::pair<int64_t, std::vector<Trick *>>>(m_tricks.size());
 
-    if (last_stage == STAGE_ZERO || last_stage == STAGE_PLUS)
-        return std::max(T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, use_tricks));
-
-    return std::max({T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, use_tricks), T_star(n - 1, STAGE_ZERO, use_tricks)});
+    for (uint16_t i = 0; i < 100; i++) {
+        for (uint16_t j = 0; j < m_tricks.size(); j++) 
+            m_matrix_tricks[i][j].first = INT64_MIN;
+    }
 }
 
-uint64_t Skatepark::T_plus(int16_t n, uint8_t last_stage, std::set<uint16_t> &use_tricks) {
-    if (n < 0)
-        return 0;
+std::pair<int64_t, std::vector<Trick *>> Skatepark::best_tricks(int16_t capacity, uint16_t index) {
+    if (capacity <= 0 || (capacity >= 0 && index >= m_tricks.size()))
+        return std::pair<int64_t, std::vector<Trick *>>(0, {});
 
-    uint64_t sum = 0;
-    uint64_t count = 0;
-    std::set<uint16_t> new_use_tricks;
+    if (m_matrix_tricks[capacity][index].first != INT64_MIN)
+        return m_matrix_tricks[capacity][index];
 
-    for (Trick *s : m_tricks) {
-        if (s->m_baseline_score > 0 && m_sections.at(m_sections.size() - 1 - n)->m_crossing_time >= s->m_time_trick) {
-
-            auto it = use_tricks.find(count);
-
-            if (it != use_tricks.end()) 
-                sum += s->m_baseline_score / 2;
-            else 
-                sum += s->m_baseline_score;
-
-            new_use_tricks.insert(count);
-            count++;
-        }
+    if (m_tricks[index]->m_time_trick > (uint16_t)capacity) {
+        m_matrix_tricks[capacity][index] = best_tricks(capacity, index + 1);
+        return m_matrix_tricks[capacity][index];
     }
 
+    std::pair<int64_t, std::vector<Trick *>> use = best_tricks(capacity - m_tricks[index]->m_time_trick, index + 1);
+    std::pair<int64_t, std::vector<Trick *>> not_use = best_tricks(capacity, index + 1);
+    use.first += m_tricks[index]->m_baseline_score;
 
-    sum *= (count * m_sections.at(m_sections.size() - 1 - n)->m_bonus_factor);
-
-    if (last_stage == STAGE_ZERO || last_stage == STAGE_PLUS)
-        return sum + std::max(T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, new_use_tricks));
-
-    return sum + std::max({T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, new_use_tricks), T_star(n - 1, STAGE_ZERO, new_use_tricks)});
-}
-
-uint64_t Skatepark::T_star(int16_t n, uint8_t last_stage, std::set<uint16_t> &use_tricks) {
-
-    if (n < 0)
-        return 0;
-
-    uint64_t sum = 0;
-    uint64_t count = 0;
-    std::set<uint16_t> new_use_tricks;
-
-    for (Trick *s : m_tricks) {
-        auto it = use_tricks.find(count);
-        if (it != use_tricks.end())
-            continue;
-
-        if (s->m_baseline_score > 0 && m_sections.at(m_sections.size() - 1 - n)->m_crossing_time >= s->m_time_trick) {
-            sum += s->m_baseline_score;
-
-            new_use_tricks.insert(count);
-            count++;
-        }
+    if (use >= not_use) {
+        m_matrix_tricks[capacity][index].first = use.first;
+        m_matrix_tricks[capacity][index].second.push_back(m_tricks[index]);
+        m_matrix_tricks[capacity][index].second.insert(
+            m_matrix_tricks[capacity][index].second.end(), use.second.begin(), use.second.end());
+    } else {
+        m_matrix_tricks[capacity][index].first = not_use.first;
+        m_matrix_tricks[capacity][index].second.insert(
+            m_matrix_tricks[capacity][index].second.end(), not_use.second.begin(), not_use.second.end());
     }
 
-    sum *= (count * m_sections.at(m_sections.size() - 1 - n)->m_bonus_factor);
-
-    if (last_stage == STAGE_ZERO || last_stage == STAGE_PLUS)
-        return sum + std::max(T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, new_use_tricks));
-
-    return sum + std::max({T_zero(n - 1, STAGE_ZERO), T_plus(n - 1, STAGE_ZERO, new_use_tricks), T_star(n - 1, STAGE_ZERO, new_use_tricks)});
+    // m_matrix_tricks[capacity][index] = std::max(use, not_use);
+    return m_matrix_tricks[capacity][index];
 }
 
-uint64_t Skatepark::findMaxTrickSequence() {
+// uint64_t Skatepark::trick_sequence(int16_t n, std::vector<const Trick *> used_tricks) {
+//     if (n < 0)
+//         return 0;
 
-    std::set<uint16_t> use_tricks;
-    return std::max({T_zero(m_sections.size() - 1, STAGE_ZERO), T_plus(m_sections.size() - 1, STAGE_ZERO, use_tricks), T_star(m_sections.size() - 1, STAGE_ZERO, use_tricks)});
+//     std::set<uint16_t> new_use_tricks;
+
+//     uint16_t i = calc_index(used_tricks);
+
+//     if()
+
+//     int64_t sum;
+//     for (const Trick *s : m_tricks) {
+
+//         if (m_sections.at(m_sections.size() - 1 - n)->m_crossing_time >= s->m_time_trick)
+//             if ()
+//             sum += s->m_baseline_score;
+//     }
+
+//     sum *= used_tricks.size() * m_sections.at(m_sections.size() - 1 - n)->m_bonus_factor;
+
+//     return sum + std::max({trick_sequence(n - 2, {}),
+//                            trick_sequence(n - 1, m_tricks),
+//                            trick_sequence(n - 1, m_tricks)});
+// }
+
+uint64_t Skatepark::more_radical_crossing() {
+    std::pair<int64_t, std::vector<Trick *>> a = best_tricks(m_sections[0]->m_crossing_time, 0);
+    return a.first;
 }

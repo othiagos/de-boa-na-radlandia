@@ -31,17 +31,17 @@ int main(int argc, char const *argv[]) {
 
         std::cin >> p >> t;
 
-        tricks.push_back(new Trick(p, t));
+        tricks.push_back(new Trick(p, t, j));
     }
 
     Skatepark park(sections, tricks);
 
-    uint64_t t = park.findMaxTrickSequence();
+    uint64_t t = park.more_radical_crossing();
     std::cout << t << std::endl;
 
     for (Section *s : sections)
         delete s;
-
+ 
     for (Trick *t : tricks)
         delete t;
 

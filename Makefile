@@ -46,7 +46,7 @@ $(BUILD_DIR)/%.o: $(TEST_DIR)/%.$(CFILE)
 	$(CC) -c $(CFLAGS) $< -I $(INC_DIR) -I $(LIB_DIR) -o $@
 
 leak_check: all
-	valgrind --leak-check=full --show-leak-kinds=all $(EXE) < $(ARGS) > /dev/null 
+	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all $(EXE) < $(ARGS) > /dev/null 
 
 heap_profiler: all
 	valgrind --tool=massif --massif-out-file=massif.txt $(EXE) < $(ARGS) > /dev/null
