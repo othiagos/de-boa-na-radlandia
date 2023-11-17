@@ -36,8 +36,16 @@ int main(int argc, char const *argv[]) {
 
     Skatepark park(sections, tricks);
 
-    uint64_t t = park.more_radical_crossing();
-    std::cout << t << std::endl;
+    std::pair<int64_t, std::vector<std::vector<Trick *>>> t = park.more_radical_crossing(0, {});
+    std::cout << t.first << std::endl;
+
+    for (auto it = t.second.rbegin(); it != t.second.rend(); it++) {
+        std::cout << it->size() << ' ';
+        for (Trick *trick : *it) {
+            std::cout << (uint16_t)trick->m_index + 1 << ' ';
+        }
+        std::cout << '\n';
+    }
 
     for (Section *s : sections)
         delete s;
