@@ -31,7 +31,7 @@ int main(int argc, char const *argv[]) {
 
         std::cin >> p >> t;
 
-        tricks.push_back(std::make_shared<Trick>(p, t, j));
+        if (p > 0) tricks.push_back(std::make_shared<Trick>(p, t, j));
     }
 
     Skatepark park(sections, tricks);
