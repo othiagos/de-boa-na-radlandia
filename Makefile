@@ -7,7 +7,7 @@ LIB_DIR = ./lib
 BIN_DIR = ./bin
 BUILD_DIR = ./build
 TEST_DIR = ./tests
-CFLAGS = --std=c++11 -Wall -O0 -g
+CFLAGS = --std=c++11 -Wall -O3 -g
 HFIlE = hpp
 CFILE = cpp
 EXE = $(BIN_DIR)/$(NAME)
