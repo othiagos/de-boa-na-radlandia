@@ -85,18 +85,16 @@ std::pair<int64_t, std::vector<Trick*>> Skatepark::best_tricks(int32_t capacity,
     auto not_use = best_tricks(capacity, index + 1, tricks);
     use.first += tricks[index]->m_baseline_score;
 
-    std::pair<int64_t, std::vector<Trick*>> ret;
-    if (use.first * (use.second.size() + 1) >= not_use.first * not_use.second.size()) {
+    if (use.first >= not_use.first) {
+        std::pair<int64_t, std::vector<Trick*>> ret;
         ret.first = use.first;
         ret.second.push_back(tricks[index]);
         ret.second.insert(ret.second.end(), use.second.begin(), use.second.end());
 
-    } else {
-        ret.first = not_use.first;
-        ret.second.insert(ret.second.end(), not_use.second.begin(), not_use.second.end());
-    }
+        return ret;
+    } 
 
-    return ret;
+    return not_use;
 }
 
 std::pair<int64_t, std::vector<std::vector<Trick*>>> Skatepark::more_radical_crossing(uint16_t n, std::vector<Trick*> used_tricks) {
@@ -110,11 +108,7 @@ std::pair<int64_t, std::vector<std::vector<Trick*>>> Skatepark::more_radical_cro
         return it->second;
     }
 
-    std::vector<std::pair<int64_t, std::vector<std::vector<Trick *>>>> values;
-    std::pair<int64_t, std::vector<Trick *>> out_1;
-    std::pair<int64_t, std::vector<std::vector<Trick *>>> ret_1 = more_radical_crossing(n + 1, {});
-    ret_1.second.push_back(out_1.second);
-    values.push_back(ret_1);
+    std::pair<int64_t, std::vector<std::vector<Trick *>>> max = more_radical_crossing(n + 1, {});
 
     for (uint16_t i = 0; i < m_possible_tricks.size(); i++) {
 
@@ -128,11 +122,10 @@ std::pair<int64_t, std::vector<std::vector<Trick*>>> Skatepark::more_radical_cro
         ret_2.first += out_2.first;
         ret_2.second.push_back(out_2.second);
 
-        values.push_back(ret_2);
+        if (max.first < ret_2.first)
+            max = ret_2;
     }
 
-    auto max_values = *std::max_element(values.begin(), values.end());
-    m_maps_radical.insert({rstr, max_values});
-
-    return max_values;
+    m_maps_radical.insert({rstr, max});
+    return max;
 }
