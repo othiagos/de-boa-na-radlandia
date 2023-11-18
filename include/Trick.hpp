@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 class Trick {
 public:
@@ -11,4 +12,6 @@ public:
     Trick(int32_t baseline_score, uint32_t time_trick, uint8_t index);
 
     Trick(const Trick &t);
+
+    std::string to_string() const;
 };

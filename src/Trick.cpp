@@ -8,3 +8,7 @@ Trick::Trick(const Trick &t) {
     this->m_index = t.m_index;
     this->m_time_trick = t.m_time_trick;
 }
+
+std::string Trick::to_string() const {
+    return std::to_string(m_baseline_score) + std::to_string(m_index);
+}

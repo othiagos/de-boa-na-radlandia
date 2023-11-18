@@ -7,26 +7,28 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <vector>
 
-#define MATRIX std::vector<std::vector<std::pair<int64_t, std::vector<Trick *>>>>
+#define MATRIX std::vector<std::shared_ptr<std::vector<std::pair<int64_t, std::vector<std::shared_ptr<Trick>>>>>>
 
 class Skatepark {
 public:
-    std::vector<Section *> m_sections;
-    std::vector<Trick *> m_tricks;
-    MATRIX m_matrix_tricks;
-    std::vector<std::vector<Trick *>> m_possible_tricks;
+    std::vector<std::shared_ptr<Section>> m_sections;
+    std::vector<std::shared_ptr<Trick>> m_tricks;
+    std::vector<std::vector<std::shared_ptr<Trick>>> m_possible_tricks;
+    std::map<std::string, std::shared_ptr<MATRIX>> m_maps;
 
-    Skatepark(std::vector<Section *> sections, std::vector<Trick *> tricks);
+    Skatepark(std::vector<std::shared_ptr<Section>> sections, std::vector<std::shared_ptr<Trick>> tricks);
 
-    void generated_matrix(const std::vector<Trick *> &tricks ,MATRIX &out);
+    void generated_matrix(const std::vector<std::shared_ptr<Trick>> &tricks, std::shared_ptr<MATRIX> &out);
 
-    void generated_penalized_tricks(const std::vector<Trick *> &tricks, const std::vector<Trick *> &use_tricks, std::vector<Trick *> &out);
+    void generated_penalized_tricks(const std::vector<std::shared_ptr<Trick>> &tricks, const std::vector<std::shared_ptr<Trick>> &use_tricks, std::vector<std::shared_ptr<Trick>> &out);
 
-    void otimize_reference(std::vector<Trick *> &tricks, std::vector<Trick *> &tricks_out);
+    std::string vector_to_string(const std::vector<std::shared_ptr<Trick>> &v);
 
-    std::pair<int64_t, std::vector<Trick *>> best_tricks(int16_t capacity, uint16_t index, MATRIX &mat, std::vector<Trick *> &tricks);
+    std::pair<int64_t, std::vector<std::shared_ptr<Trick>>> best_tricks(int16_t capacity, uint16_t index, std::shared_ptr<MATRIX> mat, std::vector<std::shared_ptr<Trick>> &tricks);
 
-    std::pair<int64_t, std::vector<std::vector<Trick *>>> more_radical_crossing(uint16_t n, std::vector<Trick *> used_tricks);
+    std::pair<int64_t, std::vector<std::vector<std::shared_ptr<Trick>>>> more_radical_crossing(uint16_t n, std::vector<std::shared_ptr<Trick>> used_tricks);
 };
