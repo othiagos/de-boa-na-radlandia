@@ -1,5 +1,6 @@
 #include "Skatepark.hpp"
 
+#include <iostream>
 Skatepark::Skatepark(std::vector<Section*> sections, std::vector<Trick*> tricks) {
     this->m_sections = sections;
     this->m_tricks = tricks;
@@ -13,12 +14,15 @@ Skatepark::Skatepark(std::vector<Section*> sections, std::vector<Trick*> tricks)
     uint16_t max_combination = pow(2, m_tricks.size());
     for (uint16_t i = 1; i < max_combination; i++) {
         std::vector<Trick*> sub_trick;
-
+        uint64_t sum = 0;
         for (uint16_t j = 0; j < m_tricks.size(); j++) {
-            if (i >> j & 1)
+            if (i >> j & 1) {
                 sub_trick.push_back(m_tricks[j]);
+                sum += m_tricks[j]->m_time_trick;
+            }
         }
         m_possible_tricks.push_back(sub_trick);
+        m_possible_tricks_time_trick.push_back(sum);
     }
 }
 
@@ -47,13 +51,16 @@ Trick* Skatepark::binary_search(const std::vector<Trick*> &tricks, uint8_t needl
     throw std::invalid_argument("index " + std::to_string(needle) + " not found");
 }
 
-void Skatepark::generated_penalized_tricks(const std::vector<Trick*> &tricks, const std::vector<Trick*> &use_tricks, std::vector<Trick*> &penalized_tricks) {
+uint64_t Skatepark::generated_penalized_tricks(const std::vector<Trick*> &tricks, const std::vector<Trick*> &use_tricks, std::vector<Trick*> &penalized_tricks) {
 
     uint16_t i = 1;
+    uint64_t sum = 0;
     Trick* current_use_trick = (use_tricks.size()) ? use_tricks[0] : nullptr;
     for (Trick* t : tricks) {
         if (current_use_trick != nullptr && t->m_index == current_use_trick->m_index) {
-            penalized_tricks.push_back(binary_search(m_tricks_penalized, t->m_index));
+            Trick *c = binary_search(m_tricks_penalized, t->m_index);
+            penalized_tricks.push_back(c);
+            sum += c->m_baseline_score;
 
             if (i < use_tricks.size()) {
                 current_use_trick = use_tricks[i];
@@ -61,8 +68,11 @@ void Skatepark::generated_penalized_tricks(const std::vector<Trick*> &tricks, co
             }
         } else {
             penalized_tricks.push_back(t);
+            sum += t->m_baseline_score;
         }
     }
+
+    return sum;
 }
 
 std::string Skatepark::radical_to_string(const std::vector<Trick*> &v, uint16_t n) {
@@ -71,30 +81,6 @@ std::string Skatepark::radical_to_string(const std::vector<Trick*> &v, uint16_t 
         s += t->to_string();
     s += std::to_string(n);
     return s;
-}
-
-std::pair<int64_t, std::vector<Trick*>> Skatepark::best_tricks(int32_t capacity, uint16_t index, std::vector<Trick*> &tricks) {
-    if (capacity <= 0 || (capacity >= 0 && index >= tricks.size()))
-        return std::pair<int64_t, std::vector<Trick*>>(0, {});
-
-    if (tricks[index]->m_time_trick > (uint32_t)capacity) {
-        return best_tricks(capacity, index + 1, tricks);
-    }
-
-    auto use = best_tricks(capacity - tricks[index]->m_time_trick, index + 1, tricks);
-    auto not_use = best_tricks(capacity, index + 1, tricks);
-    use.first += tricks[index]->m_baseline_score;
-
-    if (use.first >= not_use.first) {
-        std::pair<int64_t, std::vector<Trick*>> ret;
-        ret.first = use.first;
-        ret.second.push_back(tricks[index]);
-        ret.second.insert(ret.second.end(), use.second.begin(), use.second.end());
-
-        return ret;
-    } 
-
-    return not_use;
 }
 
 std::pair<int64_t, std::vector<std::vector<Trick*>>> Skatepark::more_radical_crossing(uint16_t n, std::vector<Trick*> used_tricks) {
@@ -109,21 +95,26 @@ std::pair<int64_t, std::vector<std::vector<Trick*>>> Skatepark::more_radical_cro
     }
 
     std::pair<int64_t, std::vector<std::vector<Trick *>>> max = more_radical_crossing(n + 1, {});
+    max.second.push_back({});
 
     for (uint16_t i = 0; i < m_possible_tricks.size(); i++) {
 
+        if (m_possible_tricks_time_trick[i] > m_sections[n]->m_crossing_time) continue;
+
         std::vector<Trick *> tricks;
-        generated_penalized_tricks(m_possible_tricks[i], used_tricks, tricks);
+        uint64_t sum = generated_penalized_tricks(m_possible_tricks[i], used_tricks, tricks);
+        std::pair<int64_t, std::vector<Trick *>> curr;
+        curr.first = sum;
+        curr.second = tricks;
 
-        std::pair<int64_t, std::vector<Trick *>> out_2 = best_tricks(m_sections[n]->m_crossing_time, 0, tricks);
-        out_2.first *= out_2.second.size() * m_sections[n]->m_bonus_factor;
+        curr.first *= curr.second.size() * m_sections[n]->m_bonus_factor;
 
-        std::pair<int64_t, std::vector<std::vector<Trick *>>> ret_2 = more_radical_crossing(n + 1, out_2.second);
-        ret_2.first += out_2.first;
-        ret_2.second.push_back(out_2.second);
+        std::pair<int64_t, std::vector<std::vector<Trick *>>> ret = more_radical_crossing(n + 1, curr.second);
+        ret.first += curr.first;
+        ret.second.push_back(curr.second);
 
-        if (max.first < ret_2.first)
-            max = ret_2;
+        if (max.first < ret.first)
+            max = ret;
     }
 
     m_maps_radical.insert({rstr, max});
