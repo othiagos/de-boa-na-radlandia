@@ -1,7 +1,7 @@
 #include "Trick.hpp"
 
-Trick::Trick(int32_t baseline_score, uint32_t time_trick, uint8_t index) :
-    m_baseline_score(baseline_score), m_time_trick(time_trick), m_index(index) { }
+Trick::Trick(int32_t baseline_score, uint32_t time_trick, uint16_t index)
+    : m_baseline_score(baseline_score), m_time_trick(time_trick), m_index(index) {}
 
 Trick::Trick(const Trick &t) {
     this->m_baseline_score = t.m_baseline_score;
@@ -10,5 +10,5 @@ Trick::Trick(const Trick &t) {
 }
 
 std::string Trick::to_string() const {
-    return std::to_string(m_baseline_score) + std::to_string(m_index);
+    return std::to_string(m_index);
 }
