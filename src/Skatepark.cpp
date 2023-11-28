@@ -22,13 +22,6 @@ Skatepark::Skatepark(std::vector<Section *> sections, std::vector<Trick *> trick
             }
         }
 
-        if (!std::is_sorted(sub_trick.begin(), sub_trick.end())) {
-            for (Trick *t : sub_trick) {
-                std::cout << t->m_index << ' ';
-            }
-            std::cout << std::endl;
-        }
-
         m_possible_tricks.push_back(sub_trick);
         m_possible_tricks_time_trick.push_back(sum);
     }
