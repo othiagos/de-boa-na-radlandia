@@ -6,17 +6,29 @@ Skatepark::Skatepark(std::vector<Section *> sections, std::vector<Trick *> trick
 
     uint16_t max_combination = pow(2, m_tricks.size());
 
+    m_possible_tricks.reserve(max_combination);
+    m_possible_tricks_time_trick.reserve(max_combination);
+
     m_possible_tricks.push_back({});
     m_possible_tricks_time_trick.push_back(0);
     for (uint16_t i = 1; i < max_combination; i++) {
         std::vector<Trick *> sub_trick;
         uint64_t sum = 0;
+        
         for (uint16_t j = 0; j < m_tricks.size(); j++) {
             if (i >> j & 1) {
                 sub_trick.push_back(m_tricks[j]);
                 sum += m_tricks[j]->m_time_trick;
             }
         }
+
+        if (!std::is_sorted(sub_trick.begin(), sub_trick.end())) {
+            for (Trick *t : sub_trick) {
+                std::cout << t->m_index << ' ';
+            }
+            std::cout << std::endl;
+        }
+
         m_possible_tricks.push_back(sub_trick);
         m_possible_tricks_time_trick.push_back(sum);
     }
@@ -43,24 +55,20 @@ Skatepark::Skatepark(std::vector<Section *> sections, std::vector<Trick *> trick
             m_tricks_sum[i][j] = INT64_MIN;
         }
     }
+}
 
+bool Skatepark::contains(const std::vector<Trick *> &vecObj, const Trick *t) {
+    auto it = std::find(vecObj.begin(), vecObj.end(), t);
+    return it != vecObj.end();
 }
 
 int64_t Skatepark::sum_penalized_tricks(uint16_t used_m, uint16_t m) {
-
-    uint16_t i = 1;
     int64_t sum = 0;
-    const std::vector<Trick *> &v = m_possible_tricks[used_m];
-    Trick *current_use_trick = (v.size()) ? v[0] : nullptr;
-
+    
+    const std::vector<Trick *> &used_v = m_possible_tricks[used_m];
     for (Trick *t : m_possible_tricks[m]) {
-        if (current_use_trick != nullptr && t->m_index == current_use_trick->m_index) {
-            sum += m_tricks[t->m_index]->m_baseline_score / 2;
-
-            if (i < v.size()) {
-                current_use_trick = v[i];
-                i++;
-            }
+        if (contains(used_v, t)) {
+            sum += t->m_baseline_score / 2;
         } else {
             sum += t->m_baseline_score;
         }

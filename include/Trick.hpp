@@ -14,4 +14,6 @@ public:
     Trick(const Trick &t);
 
     std::string to_string() const;
+
+    bool operator==(const Trick& o);
 };

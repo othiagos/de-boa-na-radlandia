@@ -12,3 +12,7 @@ Trick::Trick(const Trick &t) {
 std::string Trick::to_string() const {
     return std::to_string(m_index);
 }
+
+bool Trick::operator==(const Trick& o) {
+    return this->m_index == o.m_index;
+}

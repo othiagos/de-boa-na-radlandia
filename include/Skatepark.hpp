@@ -21,6 +21,8 @@ public:
 
     Skatepark(std::vector<Section *> sections, std::vector<Trick *> tricks);
 
+    bool contains(const std::vector<Trick *> &vecObj, const Trick *t);
+
     int64_t sum_penalized_tricks(uint16_t tricks, uint16_t use_tricks);
     
     std::pair<int64_t, std::vector<std::vector<Trick *>>> more_radical_crossing();
