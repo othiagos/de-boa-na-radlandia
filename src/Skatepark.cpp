@@ -50,23 +50,17 @@ Skatepark::Skatepark(std::vector<Section *> sections, std::vector<Trick *> trick
     }
 }
 
-bool Skatepark::contains(const std::vector<Trick *> &vecObj, const Trick *t) {
-    auto it = std::find(vecObj.begin(), vecObj.end(), t);
-    return it != vecObj.end();
-}
-
 int64_t Skatepark::sum_penalized_tricks(uint16_t used_m, uint16_t m) {
     int64_t sum = 0;
     
-    const std::vector<Trick *> &used_v = m_possible_tricks[used_m];
-    for (Trick *t : m_possible_tricks[m]) {
-        if (contains(used_v, t)) {
-            sum += t->m_baseline_score / 2;
-        } else {
-            sum += t->m_baseline_score;
+    uint16_t trick_size = m_tricks.size();
+    for (uint16_t i = 0; i < trick_size; i++) {
+        if ((used_m >> i & 1) & (m >> i & 1)) {
+            sum += m_tricks[i]->m_baseline_score / 2;
+        } else if (m >> i & 1) {
+            sum += m_tricks[i]->m_baseline_score;
         }
     }
-
     return sum;
 }
 
